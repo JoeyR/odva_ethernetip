@@ -1,14 +1,14 @@
 cc_library(
     name = "odva_ethernetip",
-    srcs = glob(["odva_ethernetip/*.cpp"]),
+    srcs = glob(["src/*.cpp"]),
     hdrs = glob([
-        "odva_ethernetip/**/*.h",
+        "include/odva_ethernetip/**/*.h",
     ]),
     visibility = ["//visibility:public"],
     deps = [
         "@boost",
     ],
-    strip_include_prefix = "odva_ethernetip",
+    strip_include_prefix="include",
     copts=["-Wno-format -Wno-reorder-ctor"],
     linkopts = ["-lpthread"],
 )
