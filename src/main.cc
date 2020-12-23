@@ -1,5 +1,6 @@
-#include <iostream>
+//#include <iostream>
 
+/*
 #include "odva_ethernetip/input_assembly.h"
 #include "odva_ethernetip/io_scanner.h"
 #include "odva_ethernetip/output_assembly.h"
@@ -56,4 +57,4 @@ int main(int args, char** argv) {
   s1.close();
 
   return 0;
-}
+}*/

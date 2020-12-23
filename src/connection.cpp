@@ -110,18 +110,18 @@ bool Connection::verifyForwardOpenResult(const ForwardOpenSuccess& result) {
     return false;
   }
   if (result.o_to_t_connection_id != o_to_t_connection_id) {
-    printf(
+    /*printf(
         "Replacing our o_to_t connection ID (%u) with connection ID provided "
         "by target (%u)\n",
         o_to_t_connection_id, result.o_to_t_connection_id);
-    o_to_t_connection_id = result.o_to_t_connection_id;
+    o_to_t_connection_id = result.o_to_t_connection_id;*/
   }
   if (result.t_to_o_connection_id != t_to_o_connection_id) {
-    printf(
+    /*printf(
         "Replacing our t_to_o connection ID (%u) with connection ID provided "
         "by target (%u)\n",
         t_to_o_connection_id, result.t_to_o_connection_id);
-    t_to_o_connection_id = result.t_to_o_connection_id;
+    t_to_o_connection_id = result.t_to_o_connection_id;*/
   }
   o_to_t_api = result.o_to_t_api;
   t_to_o_api = result.t_to_o_api;
@@ -133,8 +133,8 @@ bool Connection::verifyForwardCloseResult(const ForwardCloseSuccess& result) {
   // printf("Vendor ID: 0x%08X vs 0x%08X\n", originator_vendor_id,
   // result.originator_vendor_id); printf("Origin SN: 0x%08X vs 0x%08X\n",
   // originator_sn, result.originator_sn);
-  printf("Connection SN: 0x%08X vs 0x%08X\n", connection_sn,
-         result.connection_sn);
+  // printf("Connection SN: 0x%08X vs 0x%08X\n", connection_sn,
+  //      result.connection_sn);
   return (result.connection_sn == connection_sn &&
           result.originator_vendor_id == originator_vendor_id &&
           result.originator_sn == originator_sn);
