@@ -5,36 +5,41 @@ Software License Agreement (BSD)
 \authors   Kareem Shehata <kareem@shehata.ca>
 \copyright Copyright (c) 2015, Clearpath Robotics, Inc., All rights reserved.
 
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that
-the following conditions are met:
- * Redistributions of source code must retain the above copyright notice, this list of conditions and the
-   following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
-   following disclaimer in the documentation and/or other materials provided with the distribution.
- * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
-   products derived from this software without specific prior written permission.
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+ * Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+ * Neither the name of Clearpath Robotics nor the names of its contributors may
+be used to endorse or promote products derived from this software without
+specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WAR-
-RANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, IN-
-DIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WAR- RANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, IN- DIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <iostream>
-#include <boost/bind.hpp>
-
 #include "odva_ethernetip/io_scanner.h"
+
+#include <iostream>
+
+#include "odva_ethernetip/cpf_item.h"
+#include "odva_ethernetip/cpf_packet.h"
 #include "odva_ethernetip/eip_types.h"
+#include "odva_ethernetip/encap_packet.h"
 #include "odva_ethernetip/serialization/buffer_reader.h"
 #include "odva_ethernetip/serialization/buffer_writer.h"
-#include "odva_ethernetip/encap_packet.h"
-#include "odva_ethernetip/cpf_packet.h"
-#include "odva_ethernetip/cpf_item.h"
-#include "odva_ethernetip/identity_item_data.h"
 #include "odva_ethernetip/socket/socket.h"
+#include <boost/bind.hpp>
 
 using namespace boost::asio;
 using boost::asio::ip::udp;
@@ -45,21 +50,21 @@ namespace eip {
 using serialization::BufferReader;
 using serialization::BufferWriter;
 
-IOScanner::IOScanner(io_service& io_service, string hostname)
-    : socket_(io_service), hostname_(hostname)
-{ 
-  std::cout<< "Opening UDP socket... ";
+IOScanner::IOScanner(io_service& io_service, string hostname,
+                     eip::IdentityItemData* id)
+    : socket_(io_service), hostname_(hostname) {
+  // std::cout<< "Opening UDP socket... ";
   socket_.open(udp::v4());
-  socket_.async_receive_from(buffer(recv_buf_), device_endpoint_,
-    boost::bind(&IOScanner::handleListIdentityResponse, this,
-      boost::asio::placeholders::error,
-      boost::asio::placeholders::bytes_transferred));
-  std::cout<< "done." << endl;
+  socket_.async_receive_from(
+      buffer(recv_buf_), device_endpoint_,
+      boost::bind(&IOScanner::handleListIdentityResponse, this,
+                  boost::asio::placeholders::error,
+                  boost::asio::placeholders::bytes_transferred, id));
+  // std::cout<< "done." << endl;
 }
 
-void IOScanner::sendListIdentityRequest()
-{
-  std::cout<< "Sending List Identity Request... ";
+void IOScanner::sendListIdentityRequest() {
+  // std::cout<< "Sending List Identity Request... ";
   udp::resolver r(GET_IO_SERVICE(&socket_));
   udp::resolver::query q(udp::v4(), hostname_, "44818");
   udp::endpoint receiver_endpoint = *r.resolve(q);
@@ -69,96 +74,96 @@ void IOScanner::sendListIdentityRequest()
   BufferWriter w(buffer(d));
   pkt.serialize(w);
   socket_.send_to(buffer(d, w.getByteCount()), receiver_endpoint);
-  std::cout<< "done."<< endl;
+  // std::cout<< "done."<< endl;
 }
 
 void IOScanner::handleListIdentityResponse(const boost::system::error_code& ec,
-  std::size_t num_bytes)
-{
-  if (ec)
-  {
-    std::cout<< "Error receiving list identity response message"<< endl;
+                                           std::size_t num_bytes,
+                                           IdentityItemData* id) {
+  if (ec) {
+    // std::cout << "Error receiving list identity response message" << endl;
     return;
   }
 
-  try
-  {
+  try {
     BufferReader r(buffer(recv_buf_, num_bytes));
     EncapPacket pkt;
     pkt.deserialize(r);
-    if (r.getByteCount() != num_bytes)
-    {
-      std::cout<< "Packet received with "<< num_bytes <<"bytes, but only" << r.getByteCount() <<" bytes used";
+    if (r.getByteCount() != num_bytes) {
+      // std::cout << "Packet received with " << num_bytes << "bytes, but only"
+      //          << r.getByteCount() << " bytes used";
     }
 
-    if (pkt.getHeader().command != EIP_CMD_LIST_IDENTITY)
-    {
-      std::cout<< "Reply received with wrong command. Expected "<<EIP_CMD_LIST_IDENTITY<<", received "<<pkt.getHeader().command;
+    if (pkt.getHeader().command != EIP_CMD_LIST_IDENTITY) {
+      // std::cout << "Reply received with wrong command. Expected "
+      //         << EIP_CMD_LIST_IDENTITY << ", received "
+      //         << pkt.getHeader().command;
       return;
     }
-    if (pkt.getHeader().session_handle != 0)
-    {
-      std::cout<< "Non-zero session handle received: %zu", pkt.getHeader().session_handle;
+    if (pkt.getHeader().session_handle != 0) {
+      // std::cout << "Non-zero session handle received: %zu",
+      //    pkt.getHeader().session_handle;
     }
-    if (pkt.getHeader().status != 0)
-    {
-      std::cout<<"Non-zero status received: "<<pkt.getHeader().status;
+    if (pkt.getHeader().status != 0) {
+      // std::cout << "Non-zero status received: " << pkt.getHeader().status;
     }
-    if (pkt.getHeader().context[0] != 0 || pkt.getHeader().context[1] != 0)
-    {
-      std::cout<< "Non-zero sender context received: "<<pkt.getHeader().context[0]<<", "<<
-                             pkt.getHeader().context[1];
+    if (pkt.getHeader().context[0] != 0 || pkt.getHeader().context[1] != 0) {
+      // std::cout << "Non-zero sender context received: "
+      //          << pkt.getHeader().context[0] << ", "
+      //          << pkt.getHeader().context[1];
     }
-    if (pkt.getHeader().options != 0)
-    {
-      std::cout<< "Non-zero options received: "<<pkt.getHeader().options;
+    if (pkt.getHeader().options != 0) {
+      // std::cout << "Non-zero options received: " << pkt.getHeader().options;
     }
 
     CPFPacket payload;
     pkt.getPayloadAs(payload);
 
-    if (payload.getItemCount() < 1)
-    {
-      std::cout<< "No items in list identity payload!";
+    if (payload.getItemCount() < 1) {
+      // std::cout << "No items in list identity payload!";
       return;
     }
-    if (payload.getItemCount() > 1)
-    {
-      std::cout<< "More than one item in list identity payload" << payload.getItemCount();
+    if (payload.getItemCount() > 1) {
+      // std::cout << "More than one item in list identity payload"
+      //          << payload.getItemCount();
     }
 
-    if (payload.getItems().at(0).getItemType() != EIP_ITEM_LIST_IDENTITY_RESPONSE)
-    {
-      std::cout<< "Error: Payload response received with the wrong item type. Expected: "<<EIP_ITEM_LIST_IDENTITY_RESPONSE<<", received "<<payload.getItems().at(0).getItemType();
+    if (payload.getItems().at(0).getItemType() !=
+        EIP_ITEM_LIST_IDENTITY_RESPONSE) {
+      // std::cout << "Error: Payload response received with the wrong item
+      // type. "
+      //             "Expected: "
+      //          << EIP_ITEM_LIST_IDENTITY_RESPONSE << ", received "
+      //         << payload.getItems().at(0).getItemType();
       return;
     }
 
-    IdentityItemData id;
-    payload.getItems().at(0).getDataAs(id);
+    payload.getItems().at(0).getDataAs(*id);
+    /*
 
-    std::cout<< "=== Received ID Message ===" << endl;
-    std::cout<< "Encapsulation Protocol Version:"<<(int)id.encap_protocol_version<< endl;
-    std::cout<< "Address: "<< inet_ntoa(id.sockaddr.sin_addr) <<" : " << ntohs(id.sockaddr.sin_port)<< endl;
-    std::cout<< "Vendor ID: "<<(int)id.vendor_id<< endl;
-    std::cout<< "Device Type: "<<(int)id.device_type<< endl;
-    std::cout<< "Product Code: "<< (int)id.product_code<< endl;
-    std::cout<< "Revision: "<<(int)id.revision[0]<<"." <<(int)id.revision[1]<< endl;
-    std::cout<< "Status:" <<(int)id.status<< endl;
-    std::cout<< "Serial Number: "<<(int)id.serial_number<< endl;
-    std::cout<< "Product Name: "<<id.product_name.c_str()<< endl;
-    std::cout<< "State: "<<(int)id.state<< endl;
-  }
-  catch (std::length_error e)
-  {
-    std::cout<<"ERROR: Packet too short for identity response\n";
+        std::cout << "=== Received ID Message ===" << endl;
+        std::cout << "Encapsulation Protocol Version:"
+                  << (int)id->encap_protocol_version << endl;
+        std::cout << "Address: " << inet_ntoa(id->sockaddr.sin_addr) << " : "
+                  << ntohs(id->sockaddr.sin_port) << endl;
+        std::cout << "Vendor ID: " << (int)id->vendor_id << endl;
+        std::cout << "Device Type: " << (int)id->device_type << endl;
+        std::cout << "Product Code: " << (int)id->product_code << endl;
+        std::cout << "Revision: " << (int)id->revision[0] << "."
+                  << (int)id->revision[1] << endl;
+        std::cout << "Status:" << (int)id->status << endl;
+        std::cout << "Serial Number: " << (int)id->serial_number << endl;
+        std::cout << "Product Name: " << id->product_name.c_str() << endl;
+        std::cout << "State: " << (int)id->state << endl;*/
+  } catch (std::length_error e) {
+    // std::cout << "ERROR: Packet too short for identity response\n";
   }
 }
 
-void IOScanner::run()
-{
+void IOScanner::run() {
   sendListIdentityRequest();
-  std::cout<<"Waiting for responses."<< endl;
+  // std::cout << "Waiting for responses." << endl;
   GET_IO_SERVICE(&socket_).run();
 }
 
-} // namespace eip
+}  // namespace eip
